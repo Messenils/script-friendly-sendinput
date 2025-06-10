@@ -95,11 +95,15 @@
       <RuntimeLibrary Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>NotSet</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
       <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">User32.lib</AdditionalDependencies>
+      <EntryPointSymbol Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </EntryPointSymbol>
+      <NoEntryPoint Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</NoEntryPoint>
+      <DataExecutionPrevention Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DataExecutionPrevention>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
