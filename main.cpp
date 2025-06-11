@@ -31,16 +31,16 @@ void SendMouseClick(int x, int y, int z) {
     input[0].mi.dx = static_cast<LONG>(fx);
     input[0].mi.dy = static_cast<LONG>(fy);
     input[0].mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
-    if (z == 1) {
+    if (z == 1) { //left button press
         // Simulate mouse left button down
         input[1].type = INPUT_MOUSE;
         input[1].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
 
         // Simulate mouse left button up
-        input[2].type = INPUT_MOUSE; 
+        input[2].type = INPUT_MOUSE;
         input[2].mi.dwFlags = MOUSEEVENTF_LEFTUP;
     }
-    if (z == 2) {
+    else if (z == 2) { //right button press
         // Simulate mouse left button down
         input[1].type = INPUT_MOUSE;
         input[1].mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
@@ -71,7 +71,7 @@ void sendString(const std::string& text) {
         Sleep(50); // Add a small delay to mimic human typing
     }
 }
-    
+
 std::string getIniString(const std::string& section, const std::string& key, const std::string& defaultValue, const std::string& iniPath) {
     char buffer[256]; // Buffer to hold the retrieved string
     GetPrivateProfileString(section.c_str(), key.c_str(), defaultValue.c_str(), buffer, sizeof(buffer), iniPath.c_str());
@@ -85,6 +85,7 @@ void main()
     int delay = 0;
     int xpos = 0;
     int ypos = 0;
+    int errortimeout;
     int Mouseclick = 0;
     bool innstilt = false;
     bool timetoquit = false;
@@ -103,55 +104,61 @@ void main()
             Mouseclick = GetPrivateProfileInt(iniSettings.c_str(), "Mouseclick", 0, iniPath.c_str());
             textinput = getIniString(iniSettings.c_str(), "Textinput", "NOP", iniPath);
 
-            if (Mouseclick == 1 || textinput != "NOP")
-            { 
-                innstilt = true;
-                
-            }
-
-        }
-        if (Mouseclick == 1 || textinput != "NOP")
-        {
-            delay = delay - 1;
-        }
-
-
-        if (delay < 0)
-        {
-            if (Mouseclick == 1) {
-                SendMouseClick(xpos, ypos, Mouseclick);
-                Mouseclick = 0;
-            }
-            Sleep(250);
-            if (textinput != "NOP") {
-                sendString(textinput);
-                textinput = "NOP";
-            }
-            steparray++;
-            iniSettings = "Settings" + std::to_string(steparray);
-            Mouseclick = GetPrivateProfileInt(iniSettings.c_str(), "Mouseclick", 0, iniPath.c_str());
-            textinput = getIniString(iniSettings.c_str(), "Textinput", "NOP", iniPath);
-            if (Mouseclick == 1 || textinput != "NOP")
+            if (Mouseclick > 0 || textinput != "NOP")
             {
-                innstilt = false;
+                innstilt = true;
+                errortimeout = 0;
 
             }
-            else { //end of input settings
-                timetoquit = true;
+            else
+            {
+                Sleep(500); //no settings yet? okay, wait then
+                errortimeout++;
+                if (errortimeout > 9) //more than five seconds auto quit
+                {
+                    timetoquit = true;
+                    break;
+                }
+            }
+
+        }
+        else //settings received
+        {
+            delay--; //countdown seconds
+
+            if (delay < 0)
+            {
+                if (Mouseclick > 0) {
+                    SendMouseClick(xpos, ypos, Mouseclick);
+                    Mouseclick = 0;
+                }
+                Sleep(250); //click before typing?
+                if (textinput != "NOP") {
+                    sendString(textinput);
+                    textinput = "NOP";
+                }
+
+                //try to read next input settings
+                steparray++;
+                iniSettings = "Settings" + std::to_string(steparray);
+                Mouseclick = GetPrivateProfileInt(iniSettings.c_str(), "Mouseclick", 0, iniPath.c_str());
+                textinput = getIniString(iniSettings.c_str(), "Textinput", "NOP", iniPath);
+
+                if (Mouseclick > 0 || textinput != "NOP")
+                {
+                    innstilt = false; //had more settings then back to start
+                }
+                else { //end of input settings
+                    timetoquit = true;
+                    break;
+
+                }
 
             }
-                
         }
-
-        if (timetoquit == true)
-        { 
-            exit(0);
-            break;
-        }
-        Sleep(1000);  // Small delay to prevent excessive CPU usage
+        Sleep(1000);  // a second delay
     }
-
-
+    if (timetoquit == true) { //exit
+        exit(0);
+    }
 }
-
-
